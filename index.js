@@ -132,7 +132,7 @@ window.addEventListener("DOMContentLoaded", () => {
       leaderboardList.innerHTML = ""; // Clear old data
       data.forEach(user => {
         const li = document.createElement("li");
-        li.textContent = `${user.username}: ₹${user.total_expense}`;
+        li.textContent = `${user.username}: ₹${user.totalExpense}`;
         leaderboardList.appendChild(li);
       });
     })

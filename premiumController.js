@@ -12,11 +12,9 @@ exports.getLeaderboard = async (req, res) => {
 
     // Fetch users with their total expenses
     const [rows] = await db.execute(`
-      SELECT u.username, SUM(e.amount) AS total_expense
-      FROM users u
-      LEFT JOIN expenses e ON u.id = e.userId
-      GROUP BY u.id
-      ORDER BY total_expense DESC
+      SELECT users.username, users.totalExpense
+      FROM users
+      ORDER BY users.totalExpense DESC;
     `);
 
     res.json(rows);
