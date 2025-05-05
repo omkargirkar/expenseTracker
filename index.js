@@ -1,6 +1,8 @@
 //index.js
 
 const token = localStorage.getItem("token");
+let currentPage = 1;
+const limit = 10;
 
 function handleAddExpense(event) {
     event.preventDefault();
@@ -42,17 +44,8 @@ window.addEventListener("DOMContentLoaded", () => {
     })
     .catch(err => console.log(err));
     
-    //Load existing expenses
-    fetch("/expense/get",{
-        headers: {
-            'Authorization': `Bearer ${token}`
-          }
-    })
-      .then(res => res.json())
-      .then(data => {
-        data.forEach(expenseItem => displayOnScreen(expenseItem));
-      })
-      .catch(err => console.log(err));
+        // Load paginated expenses
+        fetchExpensesWithPagination(currentPage);
   })
   
   function displayOnScreen(expenseItem) {
@@ -79,6 +72,40 @@ window.addEventListener("DOMContentLoaded", () => {
 
       expenseList.appendChild(li);
   }
+
+  function fetchExpensesWithPagination(page = 1) {
+    fetch(`/expense/get?page=${page}&limit=${limit}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const expenseList = document.getElementById('expenseList');
+        expenseList.innerHTML = ''; // Clear old expenses
+        data.expenses.forEach(expenseItem => displayOnScreen(expenseItem));
+        renderPagination(data.totalExpenses, page);
+    })
+    .catch(err => console.log(err));
+}
+
+function renderPagination(totalExpenses, page) {
+  const paginationContainer = document.getElementById('pagination');
+  paginationContainer.innerHTML = ''; // Clear existing buttons
+
+  const totalPages = Math.ceil(totalExpenses / limit);
+
+  for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.disabled = i === page;
+      btn.addEventListener('click', () => {
+          currentPage = i;
+          fetchExpensesWithPagination(i);
+      });
+      paginationContainer.appendChild(btn);
+  }
+}
 
   document.getElementById("buyPremiumBtn").addEventListener("click", async () => {
     console.log("premium button clicked");

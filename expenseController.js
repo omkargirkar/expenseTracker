@@ -25,15 +25,25 @@ exports.addExpense = async (req, res) => {
 // Get All Expenses
 exports.getAllExpenses = async (req, res) => {
     const userId = req.user.userId;
-    const sql = 'SELECT * FROM expenses where userId=?';
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
     try {
-        const [rows] = await db.query(sql,[userId]);
-        res.json(rows); // Send data as JSON
+        // Fetch total count
+        const [countResult] = await db.query('SELECT COUNT(*) AS total FROM expenses WHERE userId = ?', [userId]);
+        const totalExpenses = countResult[0].total;
+
+        // Fetch paginated data
+        const [rows] = await db.query('SELECT * FROM expenses WHERE userId = ? LIMIT ? OFFSET ?', [userId, limit, offset]);
+
+        res.json({ expenses: rows, totalExpenses });
     } catch (err) {
-        console.error('Error fetching expenses:', err);
-        res.send('Failed to fetch expenses');
+        console.error('Error fetching paginated expenses:', err);
+        res.status(500).send('Failed to fetch expenses');
     }
 };
+
 
 exports.deleteExpense = async (req, res) => {
     console.log(req.params);
