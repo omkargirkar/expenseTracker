@@ -2,10 +2,6 @@
 
 const token = localStorage.getItem("token");
 
-// const cashfree = Cashfree({
-//     mode: "sandbox"
-// });
-
 function handleAddExpense(event) {
     event.preventDefault();
     const amount = document.getElementById('amount').value;
@@ -41,6 +37,7 @@ window.addEventListener("DOMContentLoaded", () => {
         document.getElementById("premiumMessage").textContent = "You are a premium user now";
         document.getElementById("buyPremiumBtn").style.display = "none";
         document.getElementById("showLeaderboardBtn").style.display = "inline";
+        document.getElementById('downloadexpense').style.display = 'inline';
       }
     })
     .catch(err => console.log(err));
@@ -83,42 +80,32 @@ window.addEventListener("DOMContentLoaded", () => {
       expenseList.appendChild(li);
   }
 
-  document.getElementById("buyPremiumBtn").addEventListener("click", () => {
-    // Send a request to your backend to get the payment session ID
+  document.getElementById("buyPremiumBtn").addEventListener("click", async () => {
+    console.log("premium button clicked");
+    try {
+      const res = await fetch("/payment/create-order", {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
   
-    fetch("/payment/create-order", {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.payment_session_id) {
-        // Initialize the Cashfree SDK with sandbox mode
-        const cashfree = Cashfree({
-          mode: "sandbox", // Set to 'production' when you're ready for live payments
-        });
-  
-        const checkoutOptions = {
-          paymentSessionId: data.payment_session_id, // Pass the payment session ID from backend
-          redirectTarget: "_self" // The payment page will open in the same window
-        };
-  
-        // Open Cashfree payment gateway
-        cashfree.checkout(checkoutOptions).then(result => {
-          if (result.error) {
-            alert(result.error.message); // Handle any error
-          } else if (result.redirect) {
-            console.log("Redirecting to Cashfree payment page...");
-          }
-        });
-      } else {
-        console.error("Failed to retrieve payment session ID");
-      }
-    })
-    .catch(error => console.error("Error with the payment request:", error));
-  });
+      const data=await res.json();
+      const paymentSessionId = data.paymentSessionId;
+      
+      const cashfree = Cashfree({
+        mode: "sandbox", // Set to 'production' when you're ready for live payments
+      });
+      
+      let checkoutOptions = {
+        paymentSessionId: paymentSessionId,
+        redirectTarget: "_self",
+    };
+    await cashfree.checkout(checkoutOptions);
+  } catch(err){
+    console.log("Error:",err);
+  }
+});
   
   document.getElementById("showLeaderboardBtn").addEventListener("click", () => {
     fetch("/premium/leaderboard", {
@@ -139,3 +126,58 @@ window.addEventListener("DOMContentLoaded", () => {
     .catch(err => console.error("Error fetching leaderboard:", err));
   });
   
+  function downloadExpenses() {
+    const token = localStorage.getItem('token');
+  
+    axios.get('http://localhost:3000/user/download', { headers: { "Authorization": token } })
+      .then((response) => {
+        if (response.status === 201) {
+          const a = document.createElement("a");
+          a.href = response.data.fileUrl;
+          a.download = 'myexpense.csv';
+          a.click();
+        } else {
+          throw new Error(response.data.message);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert('Failed to download file');
+      });
+  }
+  
+  // Filter Expenses Function
+function filterExpenses() {
+  const filterRange = document.getElementById('filterRange').value;
+
+  if (!filterRange) return;
+
+  fetch(`/expense/filter?range=${filterRange}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+    .then(res => res.json())
+    .then(data => {
+      const expenseList = document.getElementById('expenseList');
+      expenseList.innerHTML = ''; // Clear current list
+      data.forEach(expense => displayOnScreen(expense));
+    })
+    .catch(err => console.error("Error fetching filtered expenses:", err));
+}
+
+// Show filter dropdown for premium users
+window.addEventListener("DOMContentLoaded", () => {
+  fetch("/user/status", {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.isPremium) {
+        document.getElementById("filterContainer").style.display = "block";
+      }
+    })
+    .catch(err => console.log(err));
+});

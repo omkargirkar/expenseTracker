@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Expense Tracker</title>
+  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+</head>
+
+<body>
+  <h1 id="premiumMessage" style="color: green;"></h1>
+  <h2>Add Expense</h2>
+  <form onsubmit="handleAddExpense(event)">
+    <label for="amount">Amount:</label>
+    <input type="number" id="amount" name="amount" required>
+    <br><br>
+
+    <label for="description">Description:</label>
+    <input type="text" id="description" name="description" required>
+    <br><br>
+
+    <label for="category">Category:</label>
+    <select id="category" name="category" required>
+      <option value="">--Select Category--</option>
+      <option value="Grocery">Grocery</option>
+      <option value="Electronic Device">Electronic Device</option>
+      <option value="Clothing">Clothing</option>
+      <option value="Food">Food</option>
+    </select>
+    <br><br>
+
+
+    <button type="submit">Add Expense</button>
+  </form>
+
+  <button id="buyPremiumBtn">Buy Premium Membership</button><br><br>
+  <button onclick="downloadExpenses()" id="downloadexpense" style="display: none;">Download Expenses</button>
+  <button id="showLeaderboardBtn" style="display: none;">Show Leaderboard</button>
+
+  <div id="filterContainer" style="display: none;">
+    <label for="filterRange">Filter by:</label>
+    <select id="filterRange" onchange="filterExpenses()">
+      <option value="">--Select--</option>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
+  </div>
+  
+  <ul id="expenseList"></ul><br><br>
+  <ul id="leaderboardList"></ul>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"></script>
+  <script src="/index.js"></script>
+</body>
+</html>
