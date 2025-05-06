@@ -2,7 +2,8 @@
 
 const token = localStorage.getItem("token");
 let currentPage = 1;
-const limit = 10;
+let limit = localStorage.getItem("expenseLimit") || 10;
+limit = parseInt(limit);
 
 function handleAddExpense(event) {
     event.preventDefault();
@@ -27,6 +28,18 @@ function handleAddExpense(event) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const limitSelect = document.getElementById("limitSelect");
+  if (limitSelect) limitSelect.value = limit;
+
+  if (limitSelect) {
+    limitSelect.addEventListener("change", () => {
+      limit = parseInt(limitSelect.value);
+      localStorage.setItem("expenseLimit", limit);
+      currentPage = 1;
+      fetchExpensesWithPagination(currentPage);
+    });
+  }
+
   //Check premium status
   fetch("/user/status", {
     headers: {
@@ -59,16 +72,28 @@ window.addEventListener("DOMContentLoaded", () => {
   
       li.appendChild(deleteButton);
 
-      deleteButton.addEventListener("click", ()=>{
-        fetch(`/expense/delete/${expenseItem.id}`,{
-            method:"DELETE",
-            headers: {
-                'Authorization': `Bearer ${token}`
-              }
+      deleteButton.addEventListener("click", () => {
+        fetch(`/expense/delete/${expenseItem.id}`, {
+          method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         })
-        .then(()=>expenseList.removeChild(li))
-        .catch(err=>console.log(err));
-      });
+          .then(() => {
+            // Remove the deleted item from the screen
+            expenseList.removeChild(li);
+      
+            // Check how many items remain on the current page
+            const remainingItems = expenseList.children.length;
+      
+            if (remainingItems === 0 && currentPage > 1) {
+              currentPage--; // Go to previous page if current page is empty and not the first page
+            }
+      
+            fetchExpensesWithPagination(currentPage); // Reload expenses
+          })
+          .catch(err => console.log(err));
+      });      
 
       expenseList.appendChild(li);
   }

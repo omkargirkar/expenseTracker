@@ -7,7 +7,19 @@
 </head>
 
 <body>
-  <h1 id="premiumMessage" style="color: green;"></h1>
+  <h2 id="premiumMessage" style="color: green;"></h2>
+  <div>
+    <label for="limitSelect">Expenses per page:</label>
+    <select id="limitSelect">
+      <option value="2">2</option>
+      <option value="5">5</option>
+      <option value="10">10</option>
+      <option value="20">20</option>
+      <option value="30">30</option>
+      <option value="40">40</option>
+    </select>
+  </div>
+  
   <h2>Add Expense</h2>
   <form onsubmit="handleAddExpense(event)">
     <label for="amount">Amount:</label>
